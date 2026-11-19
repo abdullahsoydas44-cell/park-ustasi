@@ -1,0 +1,75 @@
+# Park Ustası — her değişiklikte Android APK dosyasını otomatik üretir
+# ve "Releases" sayfasına indirilebilir olarak koyar.
+name: APK üret
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodu al
+        uses: actions/checkout@v4
+
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Java kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Paketleri kur
+        run: npm install --no-audit --no-fund
+
+      - name: Oyunu internetsiz çalışacak şekilde hazırla
+        run: npm run prepare-web
+
+      - name: Android projesini oluştur
+        run: |
+          if [ ! -d android ]; then npx cap add android; fi
+          npx cap sync android
+
+      - name: Simgeleri üret
+        continue-on-error: true
+        run: npx @capacitor/assets generate --android --iconBackgroundColor '#0e1012' --splashBackgroundColor '#0e1012'
+
+      - name: Yatay ekran, sürüm numarası ve sabit imza
+        run: |
+          perl -0pi -e 's/<activity(\s)/<activity android:screenOrientation="sensorLandscape"$1/' android/app/src/main/AndroidManifest.xml
+          sed -i -E "s/versionCode [0-9]+/versionCode ${{ github.run_number }}/; s/versionName \"[^\"]*\"/versionName \"1.${{ github.run_number }}\"/" android/app/build.gradle
+          mkdir -p ~/.android
+          cp android-imza/debug.keystore ~/.android/debug.keystore
+
+      - name: APK oluştur
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../Park-Ustasi.apk
+
+      - name: APK'yı Actions sayfasına ekle
+        uses: actions/upload-artifact@v4
+        with:
+          name: Park-Ustasi-apk
+          path: Park-Ustasi.apk
+
+      - name: APK'yı indirme sayfasına (Releases) koy
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.${{ github.run_number }}
+          name: Park Ustası 1.${{ github.run_number }}
+          body: |
+            Telefona kurmak için aşağıdaki **Park-Ustasi.apk** dosyasını indirip açın.
+            İlk kurulumda telefon "bilinmeyen kaynaklardan yükleme" izni isteyebilir.
+          files: Park-Ustasi.apk
+          make_latest: true

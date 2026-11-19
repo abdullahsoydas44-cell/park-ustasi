@@ -1,0 +1,8 @@
+{
+  "appId": "com.abdullahsoydas.parkustasi",
+  "appName": "Park Ustası",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#0e1012"
+  }
+}

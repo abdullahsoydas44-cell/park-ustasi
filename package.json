@@ -1,0 +1,24 @@
+{
+  "name": "park-ustasi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Park Ustası - 3D park oyunu (Android)",
+  "scripts": {
+    "prepare-web": "node scripts/prepare-web.js",
+    "build": "npm run prepare-web && npx cap sync android",
+    "open": "npx cap open android",
+    "icons": "npx @capacitor/assets generate --android --iconBackgroundColor '#0e1012' --splashBackgroundColor '#0e1012'"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@fontsource/saira": "^5.0.0",
+    "@fontsource/saira-semi-condensed": "^5.0.0",
+    "three": "0.128.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.0",
+    "@capacitor/cli": "^7.0.0"
+  }
+}
